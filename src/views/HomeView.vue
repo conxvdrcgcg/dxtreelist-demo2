@@ -2,23 +2,29 @@
 import { defineComponent, onMounted, ref, computed } from "vue";
 import { faker } from "@faker-js/faker";
 import DataTable from "@/components/DataTable.vue";
+import CustomStore from "devextreme/data/custom_store";
 
 export default defineComponent({
   components: {
     DataTable,
   },
   setup() {
-    const dataTableItems = ref<any[]>();
+    const dataSource = ref<CustomStore>();
     const isLoading = ref<boolean>(false);
+    const componentKey = ref<number>(0);
 
     async function getData() {
-      dataTableItems.value = await fakeData();
+      dataSource.value = new CustomStore({
+        key: "id",
+        loadMode: "raw",
+        load: () => fakeData(),
+      });
     }
 
     function fakeData(): Promise<any[]> {
       return new Promise((resolve) => {
         const items = [];
-        for (let i = 0; i < 10000; i++) {
+        for (let i = 0; i < 1000; i++) {
           items.push({
             id: i,
             name: faker.company.name(),
@@ -61,7 +67,8 @@ export default defineComponent({
     });
 
     return {
-      dataTableItems,
+      componentKey,
+      dataSource,
       isLoading,
       getData,
       fakeData,
@@ -73,13 +80,7 @@ export default defineComponent({
 <template>
   <div>
     <h1>Data Table test</h1>
-    <button
-      v-if="dataTableItems?.length > 0"
-      :disabled="isLoading"
-      @click="getData"
-    >
-      Re-fetch Data
-    </button>
-    <DataTable :items="dataTableItems" />
+    <button :disabled="isLoading" @click="getData">Re-fetch Data</button>
+    <DataTable v-if="dataSource" :data-source="dataSource" />
   </div>
 </template>
